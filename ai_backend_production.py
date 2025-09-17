@@ -6,26 +6,27 @@ Deploy this to your hosting platform (Heroku, Railway, etc.)
 
 import os
 import json
+import requests
 from flask import Flask, request, jsonify, render_template_string
-import anthropic
 
 app = Flask(__name__)
 
-# Initialize Anthropic client
-try:
-    api_key = os.getenv('ANTHROPIC_API_KEY')
-    print(f"API Key found: {api_key[:10] if api_key else 'None'}...")
-    if api_key and api_key != "your-api-key-here":
-        print("Initializing Anthropic client...")
-        client = anthropic.Anthropic(api_key=api_key)
-        print("✅ Anthropic client initialized successfully")
-    else:
-        print("❌ No valid API key found")
-        client = None
-except Exception as e:
-    print(f"❌ Failed to initialize Anthropic client: {e}")
-    print(f"Error type: {type(e).__name__}")
-    client = None
+# Initialize Anthropic API configuration
+api_key = os.getenv('ANTHROPIC_API_KEY')
+if api_key and api_key != "your-api-key-here":
+    print(f"✅ Anthropic API key found: {api_key[:10]}...")
+    anthropic_available = True
+else:
+    print("❌ No valid API key found")
+    anthropic_available = False
+
+# Anthropic API configuration
+ANTHROPIC_API_URL = "https://api.anthropic.com/v1/complete"
+ANTHROPIC_HEADERS = {
+    "x-api-key": api_key,
+    "Content-Type": "application/json",
+    "anthropic-version": "2023-06-01"
+} if anthropic_available else None
 
 # AI Dashboard HTML (embedded for production)
 AI_DASHBOARD_HTML = """
@@ -440,19 +441,30 @@ def analyze_gpu():
 - Keep response between 120-200 words
 - Use technical precision but remain accessible"""
         
-        if client is None:
+        if not anthropic_available or not ANTHROPIC_HEADERS:
             return jsonify({
                 'success': False,
                 'error': 'AI analysis service is currently unavailable. Please try again later or contact support if the issue persists.'
             }), 503
             
-        response = client.completions.create(
-            model="claude-3-haiku-20240307",
-            max_tokens_to_sample=300,
-            prompt=f"\n\nHuman: {prompt}\n\nAssistant:"
-        )
+        # Make direct API call to Anthropic
+        payload = {
+            "model": "claude-3-haiku-20240307",
+            "max_tokens_to_sample": 300,
+            "prompt": f"\n\nHuman: {prompt}\n\nAssistant:"
+        }
         
-        analysis = response.completion
+        try:
+            response = requests.post(ANTHROPIC_API_URL, headers=ANTHROPIC_HEADERS, json=payload, timeout=30)
+            response.raise_for_status()
+            result = response.json()
+            analysis = result.get('completion', 'Analysis unavailable')
+        except Exception as e:
+            print(f"API call failed: {e}")
+            return jsonify({
+                'success': False,
+                'error': 'AI analysis service is currently unavailable. Please try again later or contact support if the issue persists.'
+            }), 503
         
         return jsonify({
             'success': True,
@@ -515,19 +527,30 @@ def recommend_upgrade():
 - Keep response between 150-250 words
 - Use technical accuracy but avoid jargon overload"""
         
-        if client is None:
+        if not anthropic_available or not ANTHROPIC_HEADERS:
             return jsonify({
                 'success': False,
                 'error': 'AI recommendation service is currently unavailable. Please try again later or contact support if the issue persists.'
             }), 503
             
-        response = client.completions.create(
-            model="claude-3-haiku-20240307",
-            max_tokens_to_sample=400,
-            prompt=f"\n\nHuman: {prompt}\n\nAssistant:"
-        )
+        # Make direct API call to Anthropic
+        payload = {
+            "model": "claude-3-haiku-20240307",
+            "max_tokens_to_sample": 400,
+            "prompt": f"\n\nHuman: {prompt}\n\nAssistant:"
+        }
         
-        recommendations = response.completion
+        try:
+            response = requests.post(ANTHROPIC_API_URL, headers=ANTHROPIC_HEADERS, json=payload, timeout=30)
+            response.raise_for_status()
+            result = response.json()
+            recommendations = result.get('completion', 'Recommendations unavailable')
+        except Exception as e:
+            print(f"API call failed: {e}")
+            return jsonify({
+                'success': False,
+                'error': 'AI recommendation service is currently unavailable. Please try again later or contact support if the issue persists.'
+            }), 503
         
         return jsonify({
             'success': True,
