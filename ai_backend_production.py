@@ -435,6 +435,12 @@ def analyze_gpu():
 - Keep response between 120-200 words
 - Use technical precision but remain accessible"""
         
+        if client is None:
+            return jsonify({
+                'success': False,
+                'error': 'AI analysis service is currently unavailable. Please try again later or contact support if the issue persists.'
+            }), 503
+            
         response = client.messages.create(
             model="claude-3-haiku-20240307",
             max_tokens=300,
@@ -504,6 +510,12 @@ def recommend_upgrade():
 - Keep response between 150-250 words
 - Use technical accuracy but avoid jargon overload"""
         
+        if client is None:
+            return jsonify({
+                'success': False,
+                'error': 'AI recommendation service is currently unavailable. Please try again later or contact support if the issue persists.'
+            }), 503
+            
         response = client.messages.create(
             model="claude-3-haiku-20240307",
             max_tokens=400,
