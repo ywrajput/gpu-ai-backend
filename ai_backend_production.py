@@ -21,7 +21,7 @@ else:
     anthropic_available = False
 
 # Anthropic API configuration
-ANTHROPIC_API_URL = "https://api.anthropic.com/v1/complete"
+ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 ANTHROPIC_HEADERS = {
     "x-api-key": api_key,
     "Content-Type": "application/json",
@@ -450,15 +450,15 @@ def analyze_gpu():
         # Make direct API call to Anthropic
         payload = {
             "model": "claude-3-haiku-20240307",
-            "max_tokens_to_sample": 300,
-            "prompt": f"\n\nHuman: {prompt}\n\nAssistant:"
+            "max_tokens": 300,
+            "messages": [{"role": "user", "content": prompt}]
         }
         
         try:
             response = requests.post(ANTHROPIC_API_URL, headers=ANTHROPIC_HEADERS, json=payload, timeout=30)
             response.raise_for_status()
             result = response.json()
-            analysis = result.get('completion', 'Analysis unavailable')
+            analysis = result.get('content', [{}])[0].get('text', 'Analysis unavailable')
         except Exception as e:
             print(f"API call failed: {e}")
             return jsonify({
@@ -536,15 +536,15 @@ def recommend_upgrade():
         # Make direct API call to Anthropic
         payload = {
             "model": "claude-3-haiku-20240307",
-            "max_tokens_to_sample": 400,
-            "prompt": f"\n\nHuman: {prompt}\n\nAssistant:"
+            "max_tokens": 400,
+            "messages": [{"role": "user", "content": prompt}]
         }
         
         try:
             response = requests.post(ANTHROPIC_API_URL, headers=ANTHROPIC_HEADERS, json=payload, timeout=30)
             response.raise_for_status()
             result = response.json()
-            recommendations = result.get('completion', 'Recommendations unavailable')
+            recommendations = result.get('content', [{}])[0].get('text', 'Recommendations unavailable')
         except Exception as e:
             print(f"API call failed: {e}")
             return jsonify({
