@@ -14,12 +14,17 @@ app = Flask(__name__)
 # Initialize Anthropic client
 try:
     api_key = os.getenv('ANTHROPIC_API_KEY')
+    print(f"API Key found: {api_key[:10] if api_key else 'None'}...")
     if api_key and api_key != "your-api-key-here":
+        print("Initializing Anthropic client...")
         client = anthropic.Anthropic(api_key=api_key)
+        print("✅ Anthropic client initialized successfully")
     else:
+        print("❌ No valid API key found")
         client = None
 except Exception as e:
-    print(f"Failed to initialize Anthropic client: {e}")
+    print(f"❌ Failed to initialize Anthropic client: {e}")
+    print(f"Error type: {type(e).__name__}")
     client = None
 
 # AI Dashboard HTML (embedded for production)
