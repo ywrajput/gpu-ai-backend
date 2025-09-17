@@ -446,13 +446,13 @@ def analyze_gpu():
                 'error': 'AI analysis service is currently unavailable. Please try again later or contact support if the issue persists.'
             }), 503
             
-        response = client.messages.create(
+        response = client.completions.create(
             model="claude-3-haiku-20240307",
-            max_tokens=300,
-            messages=[{"role": "user", "content": prompt}]
+            max_tokens_to_sample=300,
+            prompt=f"\n\nHuman: {prompt}\n\nAssistant:"
         )
         
-        analysis = response.content[0].text
+        analysis = response.completion
         
         return jsonify({
             'success': True,
@@ -521,13 +521,13 @@ def recommend_upgrade():
                 'error': 'AI recommendation service is currently unavailable. Please try again later or contact support if the issue persists.'
             }), 503
             
-        response = client.messages.create(
+        response = client.completions.create(
             model="claude-3-haiku-20240307",
-            max_tokens=400,
-            messages=[{"role": "user", "content": prompt}]
+            max_tokens_to_sample=400,
+            prompt=f"\n\nHuman: {prompt}\n\nAssistant:"
         )
         
-        recommendations = response.content[0].text
+        recommendations = response.completion
         
         return jsonify({
             'success': True,
